@@ -1,0 +1,10 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
+
+# BotDyGNN
+/data/Twibot-20/final_data
+/data/Twibot-20/processed_data
+/data/Twibot-20/raw
+/data/Twibot-20/graph_data
+/checkpoints/
+/.idea/

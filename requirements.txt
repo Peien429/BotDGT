@@ -1,0 +1,7 @@
+pytorch-lightning==2.0.4
+torch==1.13.0
+torch-cluster==1.6.1+pt113cu117
+torch-geometric==2.1.0
+torch-scatter==2.1.1+pt113cu117
+torch-sparse==0.6.17+pt113cu117
+torch-spline-conv==1.2.2+pt113cu117
