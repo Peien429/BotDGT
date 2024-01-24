@@ -105,13 +105,6 @@ class Dataset:
                                                                               self.batch_size, self.seed, type)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        # all_right_path = os.path.join(dir_path, 'all_right.pt')
-        # all_n_id_path = os.path.join(dir_path, 'all_n_id.pt')
-        # all_edge_index_path = os.path.join(dir_path, 'all_edge_index.pt')
-        # all_edge_type_path = os.path.join(dir_path, 'all_edge_type.pt')
-        # all_exist_nodes_path = os.path.join(dir_path, 'all_exist_nodes.pt')
-        # all_clustering_coefficient_path = os.path.join(dir_path, 'all_clustering_coefficient.pt')
-        # all_bidirectional_links_ratio_path = os.path.join(dir_path, 'all_bidirectional_links_ratio.pt')
         file_names = ['all_right', 'all_n_id', 'all_edge_index', 'all_edge_type', 'all_exist_nodes',
                       'all_clustering_coefficient', 'all_bidirectional_links_ratio']
         data_dict = {name: {'path': os.path.join(dir_path, f'{name}.pt'), 'data': []} for name in file_names}
@@ -144,54 +137,6 @@ class Dataset:
                 torch.save(data_dict[name]['data'], data_dict[name]['path'])
         return data_dict['all_right']['data'], data_dict['all_n_id']['data'], data_dict['all_edge_index']['data'], data_dict['all_edge_type']['data'], data_dict['all_exist_nodes']['data'], data_dict['all_clustering_coefficient']['data'], data_dict['all_bidirectional_links_ratio']['data']
 
-
-        # if os.path.exists(all_right_path) and os.path.exists(all_n_id_path) and os.path.exists(
-        #         all_edge_index_path) and os.path.exists(all_edge_type_path) and os.path.exists(
-        #     all_exist_nodes_path) and os.path.exists(all_clustering_coefficient_path) and os.path.exists(
-        #     all_bidirectional_links_ratio_path):
-        #     all_right = torch.load(all_right_path)
-        #     all_n_id = torch.load(all_n_id_path)
-        #     all_edge_index = torch.load(all_edge_index_path)
-        #     all_edge_type = torch.load(all_edge_type_path)
-        #     all_exist_nodes = torch.load(all_exist_nodes_path)
-        #     all_clustering_coefficient = torch.load(all_clustering_coefficient_path)
-        #     all_bidirectional_links_ratio = torch.load(all_bidirectional_links_ratio_path)
-        # else:
-        #     loader = dataLoader(graphs=self.graphs, input_nodes=input_nodes, batch_size=self.batch_size, shuffle=shuffle, seed=self.seed, type=type)
-        #     total_nodes_num = len(input_nodes)
-        #     batch_size = self.batch_size
-        #     all_right = []
-        #     all_n_id = []
-        #     all_edge_index = []
-        #     all_edge_type = []
-        #     all_exist_nodes = []
-        #     all_clustering_coefficient = []
-        #     all_bidirectional_links_ratio = []
-        #     for i in range(0, total_nodes_num, batch_size):
-        #         right = min(batch_size, total_nodes_num - i)
-        #         all_right.append(right)
-        #         subgraph_list = loader.iterate()
-        #         batch_n_id = [subgraph.n_id.to('cpu') for subgraph in subgraph_list]
-        #         batch_edge_index = [subgraph.edge_index.to('cpu') for subgraph in subgraph_list]
-        #         batch_edge_type = [subgraph.edge_type.to('cpu') for subgraph in subgraph_list]
-        #         batch_exist_nodes = [subgraph.exist_nodes.to('cpu') for subgraph in subgraph_list]
-        #         batch_clustering_coefficient = [subgraph.clustering_coefficient.to('cpu') for subgraph in subgraph_list]
-        #         batch_bidirectional_links_ratio = [subgraph.bidirectional_links_ratio.to('cpu') for subgraph in subgraph_list]
-        #         all_n_id.append(batch_n_id)
-        #         all_edge_index.append(batch_edge_index)
-        #         all_edge_type.append(batch_edge_type)
-        #         all_exist_nodes.append(batch_exist_nodes)
-        #         all_clustering_coefficient.append(batch_clustering_coefficient)
-        #         all_bidirectional_links_ratio.append(batch_bidirectional_links_ratio)
-        #     torch.save(all_right, all_right_path)
-        #     torch.save(all_n_id, all_n_id_path)
-        #     torch.save(all_edge_index, all_edge_index_path)
-        #     torch.save(all_edge_type, all_edge_type_path)
-        #     torch.save(all_exist_nodes, all_exist_nodes_path)
-        #     torch.save(all_clustering_coefficient, all_clustering_coefficient_path)
-        #     torch.save(all_bidirectional_links_ratio, all_bidirectional_links_ratio_path)
-        # return all_right, all_n_id, all_edge_index, all_edge_type, all_exist_nodes, all_clustering_coefficient, all_bidirectional_links_ratio
-        #
 
 class dataLoader():
     def __init__(self, graphs, input_nodes, seed, batch_size, shuffle, type):
