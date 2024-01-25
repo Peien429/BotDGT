@@ -41,28 +41,38 @@ class Trainer:
         self.best_test_metrics = null_metrics()
         self.best_test_state_dict = None
 
-    def forward_one_epoch(self, right, n_id, edge_index, exist_nodes, clustering_coefficient, bidirectional_links_ratio):
+    def forward_one_batch(self, batch_size, batch_n_id, batch_edge_index, batch_exist_nodes,
+                          batch_clustering_coefficient, batch_bidirectional_links_ratio):
+        des_tensor_list = [self.des_tensor[n_id].to(self.args.device) for n_id in batch_n_id]
+        tweet_tensor_list = [self.tweets_tensor[n_id].to(self.args.device) for n_id in batch_n_id]
+        num_prop_list = [self.num_prop[n_id].to(self.args.device) for n_id in batch_n_id]
+        category_prop_list = [self.category_prop[n_id].to(self.args.device) for n_id in batch_n_id]
+        label_list = [self.labels[n_id][:batch_size].to(self.args.device) for n_id in batch_n_id]
+        label_list = torch.stack(label_list, dim=0)
+        edge_index_list = [_.to(self.args.device) for _ in batch_edge_index]
+        clustering_coefficient_list = [_.to(self.args.device) for _ in batch_clustering_coefficient]
+        bidirectional_links_ratio_list = [_.to(self.args.device) for _ in batch_bidirectional_links_ratio]
+        exist_nodes_list = [exist_nodes[:batch_size].to(self.args.device) for exist_nodes in batch_exist_nodes]
+        exist_nodes_list = torch.stack(exist_nodes_list, dim=0)
+        output, _ = self.model(des_tensor_list, tweet_tensor_list, num_prop_list, category_prop_list, edge_index_list,
+                               clustering_coefficient_list, bidirectional_links_ratio_list, exist_nodes_list,
+                               batch_size)
+        output = output.transpose(0, 1)
+        loss = all_snapshots_loss(self.criterion, output, label_list, exist_nodes_list)
+        return output, loss, label_list, exist_nodes_list
+
+    def forward_one_epoch(self, right, n_id, edge_index, exist_nodes, clustering_coefficient,
+                          bidirectional_links_ratio):
         all_label = []
         all_output = []
         all_exist_nodes = []
         total_loss = 0.0
-        plog = ""
         for batch_size, batch_n_id, batch_edge_index, batch_exist_nodes, batch_clustering_coefficient, batch_bidirectional_links_ratio \
                 in zip(right, n_id, edge_index, exist_nodes, clustering_coefficient, bidirectional_links_ratio):
-            des_tensor_list = [self.des_tensor[n_id.to(self.args.device)] for n_id in batch_n_id]
-            tweet_tensor_list = [self.tweets_tensor[n_id.to(self.args.device)] for n_id in batch_n_id]
-            num_prop_list = [self.num_prop[n_id.to(self.args.device)] for n_id in batch_n_id]
-            category_prop_list = [self.category_prop[n_id.to(self.args.device)] for n_id in batch_n_id]
-            label_list = [self.labels[n_id.to(self.args.device)][:batch_size] for n_id in batch_n_id]
-            label_list = torch.stack(label_list, dim=0)
-            edge_index_list = [edge_index.to(self.args.device) for edge_index in batch_edge_index]
-            exist_nodes_list = [exist_nodes.to(self.args.device)[:batch_size] for exist_nodes in batch_exist_nodes]
-            exist_nodes_list = torch.stack(exist_nodes_list, dim=0)
-            clustering_coefficient_list = [clustering_coefficient.to(self.args.device) for clustering_coefficient in batch_clustering_coefficient]
-            bidirectional_links_ratio_list = [bidirectional_links_ratio.to(self.args.device) for bidirectional_links_ratio in batch_bidirectional_links_ratio]
-            output, _ = self.model(des_tensor_list, tweet_tensor_list, num_prop_list, category_prop_list, edge_index_list, clustering_coefficient_list, bidirectional_links_ratio_list, exist_nodes_list,batch_size)
-            output = output.transpose(0, 1)
-            loss = all_snapshots_loss(self.criterion, output, label_list, exist_nodes_list)
+            output, loss, label_list, exist_nodes_list = self.forward_one_batch(batch_size, batch_n_id,
+                                                                                batch_edge_index, batch_exist_nodes,
+                                                                                batch_clustering_coefficient,
+                                                                                batch_bidirectional_links_ratio)
             total_loss += loss.item() / self.args.window_size / len(right)
             all_output.append(output)
             all_label.append(label_list)
@@ -73,8 +83,6 @@ class Trainer:
         metrics = compute_metrics_one_snapshot(all_label[-1], all_output[-1], exist_nodes=all_exist_nodes[-1])
         metrics['loss'] = total_loss
         return metrics
-
-
 
     def train_per_epoch(self, current_epoch):
         self.model.train()
@@ -87,20 +95,10 @@ class Trainer:
                 in zip(self.train_right, self.train_n_id, self.train_edge_index, self.train_exist_nodes,
                        self.train_clustering_coefficient, self.train_bidirectional_links_ratio):
             self.optimizer.zero_grad()
-            des_tensor_list = [self.des_tensor[n_id.to(self.args.device)] for n_id in batch_n_id]
-            tweet_tensor_list = [self.tweets_tensor[n_id.to(self.args.device)] for n_id in batch_n_id]
-            num_prop_list = [self.num_prop[n_id.to(self.args.device)] for n_id in batch_n_id]
-            category_prop_list = [self.category_prop[n_id.to(self.args.device)] for n_id in batch_n_id]
-            label_list = [self.labels[n_id.to(self.args.device)][:batch_size] for n_id in batch_n_id]
-            label_list = torch.stack(label_list, dim=0)
-            edge_index_list = [edge_index.to(self.args.device) for edge_index in batch_edge_index]
-            exist_nodes_list = [exist_nodes.to(self.args.device)[:batch_size] for exist_nodes in batch_exist_nodes]
-            exist_nodes_list = torch.stack(exist_nodes_list, dim=0)
-            clustering_coefficient_list = [clustering_coefficient.to(self.args.device) for clustering_coefficient in batch_clustering_coefficient]
-            bidirectional_links_ratio_list = [bidirectional_links_ratio.to(self.args.device) for bidirectional_links_ratio in batch_bidirectional_links_ratio]
-            output, _ = self.model(des_tensor_list, tweet_tensor_list, num_prop_list, category_prop_list, edge_index_list, clustering_coefficient_list, bidirectional_links_ratio_list, exist_nodes_list, batch_size)
-            output = output.transpose(0, 1)
-            loss = all_snapshots_loss(self.criterion, output, label_list, exist_nodes_list, self.args.coefficient)
+            output, loss, label_list, exist_nodes_list = self.forward_one_batch(batch_size, batch_n_id,
+                                                                                batch_edge_index, batch_exist_nodes,
+                                                                                batch_clustering_coefficient,
+                                                                                batch_bidirectional_links_ratio)
             total_loss += loss.item() / self.args.window_size / len(self.train_right)
             loss.backward()
             self.optimizer.step()
@@ -121,7 +119,8 @@ class Trainer:
     @torch.no_grad()
     def val_per_epoch(self, current_epoch):
         self.model.eval()
-        metrics = self.forward_one_epoch(self.val_right, self.val_n_id, self.val_edge_index, self.val_exist_nodes, self.val_clustering_coefficient, self.val_bidirectional_links_ratio)
+        metrics = self.forward_one_epoch(self.val_right, self.val_n_id, self.val_edge_index, self.val_exist_nodes,
+                                         self.val_clustering_coefficient, self.val_bidirectional_links_ratio)
         plog = ""
         for key in ['accuracy', 'precision', 'recall', 'f1']:
             plog += ' {}: {:.6}'.format(key, metrics[key])
@@ -139,7 +138,9 @@ class Trainer:
         for test_epoch, test_state_dict in zip(self.test_epoch_list, self.test_state_dict_list):
             self.model.load_state_dict(test_state_dict)
             self.model.eval()
-            metrics = self.forward_one_epoch(self.test_right, self.test_n_id, self.test_edge_index, self.test_exist_nodes, self.test_clustering_coefficient, self.test_bidirectional_links_ratio)
+            metrics = self.forward_one_epoch(self.test_right, self.test_n_id, self.test_edge_index,
+                                             self.test_exist_nodes, self.test_clustering_coefficient,
+                                             self.test_bidirectional_links_ratio)
             plog = ""
             for key in ['accuracy', 'precision', 'recall', 'f1']:
                 plog += ' {}: {:.6}'.format(key, metrics[key])

@@ -11,7 +11,7 @@ from torch_geometric.data import Data
 import shutil
 
 
-def split_node():
+def split_user_from_node():
     file_path = r"./raw/node.json"
     save_path = r"./raw/user.json"
     if os.path.exists(save_path):
@@ -32,29 +32,11 @@ def split_node():
 
 
 def generate_global_index():
-    file_path = r"./raw/node.json"
-    save_path = r"./processed_data/uid2global_index.pkl"
-    if os.path.exists(save_path):
-        print("uid2global_index.pkl already exists")
-        return
-    else:
-        uid2index = {}
-        idx = 0
-        with open(file_path, 'r') as f:
-            object_iter = ijson.items(f, 'item')
-            while True:
-                try:
-                    object = next(object_iter)
-                    if object['id'].startswith('u'):
-                        uid2index[object['id']] = idx
-                        idx += 1
-                    else:
-                        continue
-                except StopIteration:
-                    break
-        print(len(list(uid2index.values())))
-        with open(save_path, 'wb') as f:
-            pickle.dump(uid2index, f)
+    user_df = pd.read_json(r"./raw/user.json")
+    user_idx = user_df['id']
+    uid2index = {uid: index for index, uid in enumerate(user_idx.values)}
+    with open("./processed_data/uid2global_index.pkl", "wb") as tf:
+        pickle.dump(uid2index, tf)
 
 
 def split_user_by_interval():
@@ -72,22 +54,18 @@ def split_user_by_interval():
     assert data['created_at'].isnull().sum() == 0
     # min: 2006 - 03 - 21，max: 2020 - 09 - 05
     date_str_list = [str(year) + "-" + str(month) + "-01" for year in range(2008, 2021) for month in range(1, 13)]
-    # the date in the date_list is in ascending order
     date_list = [datetime.date(*map(int, date_str.split('-'))) for date_str in date_str_list]
-    user_nums = []
     if not os.path.exists("./graph_data/global_index"):
         os.makedirs("./graph_data/global_index")
     for date in date_list:
         y = data.loc[data['created_at'] < date]
         y = y['id'].values.tolist()
         global_index = [uid2global_index[uid] for uid in y]
-        user_nums.append(len(y))
         global_index = torch.LongTensor(global_index)
         path = "./graph_data/global_index/global_index_in_snapshot_{}.pt".format(str(date))
         torch.save(global_index, path)
         if len(y) == len(data):
             break
-    print(user_nums)
 
 
 def generate_edge_for_all_snapshot():
@@ -227,6 +205,8 @@ def generate_graph_data():
     delete_temp_data()
     print("delete_temp_data finished")
 
+
 if __name__ == '__main__':
-    split_node()
+    split_user_from_node()
+    generate_global_index()
     generate_graph_data()

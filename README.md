@@ -14,9 +14,9 @@ The original datasets are available at [Twibot-20](https://github.com/BunsenFeng
 
 For each dataset:
 
-1. Put the raw data (.json .csv files) in the `\raw` folder
+1. Put the raw data (original .json .csv files) in the `\raw` folder
 
-2. Put the processed data (.pt files) in the `\processed` folder
+2. Put the processed data (original .pt files) in the `\processed` folder
 
 3. Run `preprocess.py` to generate the graph snapshots.
 

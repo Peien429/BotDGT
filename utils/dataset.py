@@ -64,14 +64,19 @@ class Dataset:
         self.tweets_tensor = self.tweets_tensor.to(self.device)
         self.num_prop = self.num_prop.to(self.device)
         self.category_prop = self.category_prop.to(self.device)
-        self.train_right, self.train_n_id, self.train_edge_index, self.train_edge_type, self.train_exist_nodes, self.train_clustering_coefficient, self.train_bidirectional_links_ratio = self.get_final_data(type='train')
-        self.val_right, self.val_n_id, self.val_edge_index, self.val_edge_type, self.val_exist_nodes, self.val_clustering_coefficient, self.val_bidirectional_links_ratio = self.get_final_data(type='val')
-        self.test_right, self.test_n_id, self.test_edge_index, self.test_edge_type, self.test_exist_nodes, self.test_clustering_coefficient, self.test_bidirectional_links_ratio = self.get_final_data(type='test')
+        self.train_right, self.train_n_id, self.train_edge_index, self.train_edge_type, self.train_exist_nodes, self.train_clustering_coefficient, self.train_bidirectional_links_ratio = self.get_final_data(
+            type='train')
+        self.val_right, self.val_n_id, self.val_edge_index, self.val_edge_type, self.val_exist_nodes, self.val_clustering_coefficient, self.val_bidirectional_links_ratio = self.get_final_data(
+            type='val')
+        self.test_right, self.test_n_id, self.test_edge_index, self.test_edge_type, self.test_exist_nodes, self.test_clustering_coefficient, self.test_bidirectional_links_ratio = self.get_final_data(
+            type='test')
         if len(self.graphs) > self.window_size and self.window_size != -1:
-            print('window size is smaller than the number of snapshots, keep the last {} snapshots'.format(self.window_size))
+            print('window size is smaller than the number of snapshots, keep the last {} snapshots'.format(
+                self.window_size))
             self.get_window_data()
         else:
-            print('window size is larger than the number of snapshots or window size is set to "-1", keep all snapshots')
+            print(
+                'window size is larger than the number of snapshots or window size is set to "-1", keep all snapshots')
             self.window_size = len(self.graphs)
 
     def get_window_data(self):
@@ -120,13 +125,12 @@ class Dataset:
                 right = min(batch_size, total_nodes_num - i)
                 data_dict['all_right']['data'].append(right)
                 subgraph_list = loader.iterate()
-                batch_n_id = [subgraph.n_id.to('cpu') for subgraph in subgraph_list]
-                batch_edge_index = [subgraph.edge_index.to('cpu') for subgraph in subgraph_list]
-                batch_edge_type = [subgraph.edge_type.to('cpu') for subgraph in subgraph_list]
-                batch_exist_nodes = [subgraph.exist_nodes.to('cpu') for subgraph in subgraph_list]
-                batch_clustering_coefficient = [subgraph.clustering_coefficient.to('cpu') for subgraph in subgraph_list]
-                batch_bidirectional_links_ratio = [subgraph.bidirectional_links_ratio.to('cpu') for subgraph in
-                                                   subgraph_list]
+                batch_n_id = [subgraph.n_id for subgraph in subgraph_list]
+                batch_edge_index = [subgraph.edge_index for subgraph in subgraph_list]
+                batch_edge_type = [subgraph.edge_type for subgraph in subgraph_list]
+                batch_exist_nodes = [subgraph.exist_nodes for subgraph in subgraph_list]
+                batch_clustering_coefficient = [subgraph.clustering_coefficient for subgraph in subgraph_list]
+                batch_bidirectional_links_ratio = [subgraph.bidirectional_links_ratio for subgraph in subgraph_list]
                 data_dict['all_n_id']['data'].append(batch_n_id)
                 data_dict['all_edge_index']['data'].append(batch_edge_index)
                 data_dict['all_edge_type']['data'].append(batch_edge_type)
@@ -135,15 +139,24 @@ class Dataset:
                 data_dict['all_bidirectional_links_ratio']['data'].append(batch_bidirectional_links_ratio)
             for name in data_dict:
                 torch.save(data_dict[name]['data'], data_dict[name]['path'])
-        return data_dict['all_right']['data'], data_dict['all_n_id']['data'], data_dict['all_edge_index']['data'], data_dict['all_edge_type']['data'], data_dict['all_exist_nodes']['data'], data_dict['all_clustering_coefficient']['data'], data_dict['all_bidirectional_links_ratio']['data']
+
+        return data_dict['all_right']['data'], \
+            data_dict['all_n_id']['data'], \
+            data_dict['all_edge_index']['data'], \
+            data_dict['all_edge_type']['data'], \
+            data_dict['all_exist_nodes']['data'], \
+            data_dict['all_clustering_coefficient']['data'], \
+            data_dict['all_bidirectional_links_ratio']['data']
 
 
 class dataLoader():
     def __init__(self, graphs, input_nodes, seed, batch_size, shuffle, type):
         super().__init__()
         num_neighbors = [2560] * 2 if type == 'train' else [-1] * 2
-        self.loader_list = [NeighborLoader(graph, shuffle=shuffle, generator=torch.Generator().manual_seed(seed), batch_size=batch_size, input_nodes=input_nodes, num_neighbors=num_neighbors)
-                            for graph in graphs]
+        self.loader_list = [
+            NeighborLoader(graph, shuffle=shuffle, generator=torch.Generator().manual_seed(seed), batch_size=batch_size,
+                           input_nodes=input_nodes, num_neighbors=num_neighbors)
+            for graph in graphs]
         self.iter_list = [iter(loader) for loader in self.loader_list]
 
     def iterate(self):
