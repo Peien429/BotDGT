@@ -3,11 +3,10 @@ from torch_geometric.nn import TransformerConv
 
 
 class GraphStructuralLayer(nn.Module):
-    def __init__(self, hidden_dim, n_heads, dropout, residual=True):
+    def __init__(self, hidden_dim, n_heads, dropout):
         super(GraphStructuralLayer, self).__init__()
         self.activation = nn.PReLU()
         self.dropout = nn.Dropout(p=dropout)
-        self.residual = residual
         self.layer1 = TransformerConv(hidden_dim, hidden_dim // n_heads, heads=n_heads, concat=True, dropout=dropout)
         self.layer2 = TransformerConv(hidden_dim, hidden_dim // n_heads, heads=n_heads, concat=True, dropout=dropout)
         self.init_weights()

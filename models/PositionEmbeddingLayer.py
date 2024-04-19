@@ -5,6 +5,7 @@ class PositionEncodingClusteringCoefficient(nn.Module):
     def __init__(self, hidden_dim):
         super(PositionEncodingClusteringCoefficient, self).__init__()
         self.clustering_coefficient_linear = nn.Linear(1, hidden_dim)
+        # Custom initialization for a linear layer
         self.init_weights()
 
     def forward(self, clustering_coefficient):
@@ -23,6 +24,3 @@ class PositionEncodingBidirectionalLinks(nn.Module):
     def forward(self, bidirectional_links_ratio):
         bidirectional_links_ratio = self.bidirectional_links_ratio_linear(bidirectional_links_ratio)
         return bidirectional_links_ratio
-
-    def init_weights(self):
-        nn.init.kaiming_uniform_(self.bidirectional_links_ratio_linear.weight)

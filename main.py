@@ -34,12 +34,12 @@ class Trainer:
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=20, eta_min=0)
         self.pbar = range(self.args.epoch)
         self.best_val_metrics = null_metrics()
-        self.test_state_dict = None
         self.test_state_dict_list = []
         self.test_epoch = None
         self.test_epoch_list = []
-        self.best_test_metrics = null_metrics()
-        self.best_test_state_dict = None
+        self.test_metrics = null_metrics()
+        self.test_state_dict = None
+        self.last_state_dict = None
 
     def forward_one_batch(self, batch_size, batch_n_id, batch_edge_index, batch_exist_nodes,
                           batch_clustering_coefficient, batch_bidirectional_links_ratio):
@@ -54,7 +54,7 @@ class Trainer:
         bidirectional_links_ratio_list = [_.to(self.args.device) for _ in batch_bidirectional_links_ratio]
         exist_nodes_list = [exist_nodes[:batch_size].to(self.args.device) for exist_nodes in batch_exist_nodes]
         exist_nodes_list = torch.stack(exist_nodes_list, dim=0)
-        output, _ = self.model(des_tensor_list, tweet_tensor_list, num_prop_list, category_prop_list, edge_index_list,
+        output = self.model(des_tensor_list, tweet_tensor_list, num_prop_list, category_prop_list, edge_index_list,
                                clustering_coefficient_list, bidirectional_links_ratio_list, exist_nodes_list,
                                batch_size)
         output = output.transpose(0, 1)
@@ -129,14 +129,27 @@ class Trainer:
         return metrics
 
     @torch.no_grad()
-    def test(self, top_k=1):
+    def test_last_model(self):
+        self.model.load_state_dict(self.last_state_dict)
+        self.model.eval()
+        metrics = self.forward_one_epoch(self.test_right, self.test_n_id, self.test_edge_index, self.test_exist_nodes,
+                                         self.test_clustering_coefficient, self.test_bidirectional_links_ratio)
+        plog = ""
+        for key in ['accuracy', 'precision', 'recall', 'f1']:
+            plog += ' {}: {:.6}'.format(key, metrics[key])
+        plog = 'Last Epoch test loss: {:.6}'.format(metrics['loss']) + plog
+        print(plog)
+        return metrics, self.last_state_dict
+
+    @torch.no_grad()
+    def test_best_model(self, top_k=1):
         best_test_metrics = null_metrics()
         best_test_state_dict = None
         self.test_state_dict_list = self.test_state_dict_list[-top_k:]
         self.test_epoch_list = self.test_epoch_list[-top_k:]
         print('start testing...')
-        for test_epoch, test_state_dict in zip(self.test_epoch_list, self.test_state_dict_list):
-            self.model.load_state_dict(test_state_dict)
+        for epoch, state_dict in zip(self.test_epoch_list, self.test_state_dict_list):
+            self.model.load_state_dict(state_dict)
             self.model.eval()
             metrics = self.forward_one_epoch(self.test_right, self.test_n_id, self.test_edge_index,
                                              self.test_exist_nodes, self.test_clustering_coefficient,
@@ -144,11 +157,11 @@ class Trainer:
             plog = ""
             for key in ['accuracy', 'precision', 'recall', 'f1']:
                 plog += ' {}: {:.6}'.format(key, metrics[key])
-            plog = 'Epoch-{} test loss: {:.6}'.format(test_epoch, metrics['loss']) + plog
+            plog = 'Epoch-{} test loss: {:.6}'.format(epoch, metrics['loss']) + plog
             print(plog)
             if is_better(metrics, best_test_metrics):
                 best_test_metrics = metrics
-                best_test_state_dict = test_state_dict
+                best_test_state_dict = state_dict
         return best_test_metrics, best_test_state_dict
 
     def train(self):
@@ -167,16 +180,19 @@ class Trainer:
                 validate_score_non_improvement_count = 0
             else:
                 validate_score_non_improvement_count += 1
+            self.last_state_dict = deepcopy(self.model.state_dict())
             if self.args.early_stop and validate_score_non_improvement_count >= self.args.patience:
                 print('Early stopping at epoch: {}'.format(current_epoch))
                 break
-        self.best_test_metrics, self.best_test_state_dict = self.test()
-        model_name = f"{self.args.interval} + {self.args.seed} + {self.best_test_metrics['accuracy']} + {self.best_test_metrics['f1']}.pt "
-
+        if self.args.early_stop:
+            self.test_metrics, self.test_state_dict = self.test_best_model(top_k=1)
+        else:
+            self.test_metrics, self.test_state_dict = self.test_last_model()
+        model_name = f"{self.args.interval} + {self.args.seed} + {self.test_metrics['accuracy']} + {self.test_metrics['f1']}.pt "
         model_dir_path = os.path.join('output', self.args.dataset_name)
         if not os.path.exists(model_dir_path):
             os.makedirs(model_dir_path)
-        torch.save(self.best_test_state_dict, os.path.join(model_dir_path, model_name))
+        torch.save(self.test_state_dict, os.path.join(model_dir_path, model_name))
 
 
 def main(args):
@@ -187,4 +203,5 @@ def main(args):
 
 if __name__ == '__main__':
     args = get_train_args()
+    print(args)
     main(args)
