@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 from models.GraphStructuralLayer import GraphStructuralLayer
-from models.GraphTemporal import GraphTemporalLayer
+from models.GraphTemporalLayer import GraphTemporalLayer
 from models.NodeFeatureEmbeddingLayer import NodeFeatureEmbeddingLayer
 from models.PositionEmbeddingLayer import PositionEncodingClusteringCoefficient, PositionEncodingBidirectionalLinks
 

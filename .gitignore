@@ -4,5 +4,6 @@
 # BotDyGNN
 /checkpoints/
 /.idea/
-!/data/Twibot-20/preprocess.py
+!/data/Twibot-20/preprocess_twibot20.py
+!/data/Twibot-22/preprocess_twibot22.py
 /data/*
