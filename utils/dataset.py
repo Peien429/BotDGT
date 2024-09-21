@@ -125,12 +125,12 @@ class Dataset:
                 right = min(batch_size, total_nodes_num - i)
                 data_dict['all_right']['data'].append(right)
                 subgraph_list = loader.iterate()
-                batch_n_id = [subgraph.n_id for subgraph in subgraph_list]
-                batch_edge_index = [subgraph.edge_index for subgraph in subgraph_list]
-                batch_edge_type = [subgraph.edge_type for subgraph in subgraph_list]
-                batch_exist_nodes = [subgraph.exist_nodes for subgraph in subgraph_list]
-                batch_clustering_coefficient = [subgraph.clustering_coefficient for subgraph in subgraph_list]
-                batch_bidirectional_links_ratio = [subgraph.bidirectional_links_ratio for subgraph in subgraph_list]
+                batch_n_id = [subgraph.n_id.to('cpu') for subgraph in subgraph_list]
+                batch_edge_index = [subgraph.edge_index.to('cpu') for subgraph in subgraph_list]
+                batch_edge_type = [subgraph.edge_type.to('cpu') for subgraph in subgraph_list]
+                batch_exist_nodes = [subgraph.exist_nodes.to('cpu') for subgraph in subgraph_list]
+                batch_clustering_coefficient = [subgraph.clustering_coefficient.to('cpu') for subgraph in subgraph_list]
+                batch_bidirectional_links_ratio = [subgraph.bidirectional_links_ratio.to('cpu') for subgraph in subgraph_list]
                 data_dict['all_n_id']['data'].append(batch_n_id)
                 data_dict['all_edge_index']['data'].append(batch_edge_index)
                 data_dict['all_edge_type']['data'].append(batch_edge_type)
