@@ -108,12 +108,6 @@ def generate_position_information_for_all_snapshot():
             file_name = file.replace('edge_index', 'clustering_coefficient')
             file_path = os.path.join(clustering_coefficient_dir_path, file_name)
             torch.save(clustering_coefficient, file_path)
-            betweenness_centrality = nx.betweenness_centrality(G)
-            betweenness_centrality = torch.FloatTensor(list(betweenness_centrality.values()))
-            assert betweenness_centrality.shape[0] == node.shape[0]
-            file_name = file.replace('edge_index', 'betweenness_centrality')
-            file_path = os.path.join(betweenness_centrality_dir_path, file_name)
-            torch.save(betweenness_centrality, file_path)
             edge_type = torch.load(os.path.join(root.replace('edge_index', 'edge_type'), file.replace('edge_index', 'edge_type')))
             edge_index = torch.load(os.path.join(root, file))
             edge_index = edge_index.t()
