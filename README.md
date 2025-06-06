@@ -1,5 +1,7 @@
 # BotDGT: Dynamicity-aware Social Network Bot Detection with Dynamic Graph Transformers
-Implementation for the paper "BotDGT: Dynamicity-aware Social Network Bot Detection with Dynamic Graph Transformers".
+Implementation for the paper "BotDGT: Dynamicity-aware Social Network Bot Detection with Dynamic Graph Transformers". 
+
+[IJCAI Official Version](https://dl.acm.org/doi/abs/10.24963/ijcai.2024/646) 
 
 BotDGT is a framework that leverages the dynamic nature of social networks to enhance the graph-based bot detection methods.
 
@@ -34,3 +36,16 @@ python main.py --dataset_name "Twibot-20" --batch_size 64 --hidden_dim 128 --wei
 python main.py --dataset_name "Twibot-22" --batch_size 256 --hidden_dim 64 --weight_decay 5e-2 --structural_learning_rate 5e-4 --temporal_learning_rate 5e-5
 
 ```
+
+## Citation
+
+If you find this code useful for your research, please cite our paper:
+
+```bibtex
+@inproceedings{he2024dynamicity,
+  title={Dynamicity-aware social bot detection with dynamic graph transformers},
+  author={He, Buyun and Yang, Yingguang and Wu, Qi and Liu, Hao and Yang, Renyu and Peng, Hao and Wang, Xiang and Liao, Yong and Zhou, Pengyuan},
+  booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence},
+  pages={5844--5852},
+  year={2024}
+}
