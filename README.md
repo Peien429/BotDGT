@@ -39,8 +39,7 @@ python main.py --dataset_name "Twibot-22" --batch_size 256 --hidden_dim 64 --wei
 
 ## Citation
 
-If you find this code useful for your research, please cite our paper:
-
+If you find this work is helpful to your research, please consider citing our paper:
 ```bibtex
 @inproceedings{he2024dynamicity,
   title={Dynamicity-aware social bot detection with dynamic graph transformers},
